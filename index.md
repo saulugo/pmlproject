@@ -10,7 +10,7 @@ The following analysis is based in a research conducted by a groupd of academics
 
 The objective of this analysis is to **train a model** that is able to predict if an especific repetition of the weight lifting exercise was done correctly or not specifying the outcomes (A,B,C,D,E). The predictors are all the measurements of euler angles, gyroscope, accelerometer and magnet provided by the body sensors.
 
-A **Random Forrest model** was trained using parallel processing and a 99.24% accuracy was obtained.
+A **Random forest model** was trained using parallel processing and a 99.4% accuracy was obtained.
 
 #Getting and Cleaning Data
 
@@ -33,14 +33,21 @@ testing <- read.csv(file_testing)
 ##Cleaning the data
 From the summary of the training dataset it can be identify the following issues with the data:
 
-1) The **kurtosis** (kurtosis_roll_XXX, kurtosis_picth_XXX, kurtosis_yaw_XXX variables) were render as factor variables. In order to facilitate the analysis, these variables will be converted to continous numeric variables.
-2) The **skewness** (skewness_roll_XXX, skewness_picth_XXX, skewness_yaw_XXX variables) are also factors variables and will be converted to numeric variables.
-3) The variable **skewness_roll_belt.1** will be dropped. The variable **skewness_roll_belt** will be used in its place.
-4) There are a group of variables that have 19216 NAs out of 19622 observations. Those variables will not add valuable information to train the prediction model; therefore, those variables will be eliminated from the analysis.
-5) The variables **max_yaw** and **min_yaw** (max_yaw_XXX and min_yaw_XXX variables) were also rendered as factor variables. Those will be converted to numeric continous variables.
-6) As max and min roll and picth variables have most of the values as NAs, the **amplitude** variables have also most of the values in NAs, so **amplitude** variables will be discarted from the analysis.
-7) The variables max_yaw_XXX and min_yaw_XXX has the same values, as a result the variable amplitude_yaw_XX is always zero. So, these variables do not add information and will be discarted from the analysis.
-8) As the machine learning algorithm will be trained to predict if the exercise was done well, the variables related to timestamp, window and the name of the person executing the exercise are irrelevant. Those variables will be dropped.
+1. The **kurtosis** (kurtosis_roll_XXX, kurtosis_picth_XXX, kurtosis_yaw_XXX variables) were render as factor variables. In order to facilitate the analysis, these variables will be converted to continous numeric variables.
+
+2. The **skewness** (skewness_roll_XXX, skewness_picth_XXX, skewness_yaw_XXX variables) are also factors variables and will be converted to numeric variables.
+
+3. The variable **skewness_roll_belt.1** will be dropped. The variable **skewness_roll_belt** will be used in its place.
+
+4. There are a group of variables that have 19216 NAs out of 19622 observations. Those variables will not add valuable information to train the prediction model; therefore, those variables will be eliminated from the analysis.
+
+5. The variables **max_yaw** and **min_yaw** (max_yaw_XXX and min_yaw_XXX variables) were also rendered as factor variables. Those will be converted to numeric continous variables.
+
+6. As max and min roll and picth variables have most of the values as NAs, the **amplitude** variables have also most of the values in NAs, so **amplitude** variables will be discarted from the analysis.
+
+7. The variables max_yaw_XXX and min_yaw_XXX has the same values, as a result the variable amplitude_yaw_XX is always zero. So, these variables do not add information and will be discarted from the analysis.
+
+8. As the machine learning algorithm will be trained to predict if the exercise was done well, the variables related to timestamp, window and the name of the person executing the exercise are irrelevant. Those variables will be dropped.
 
 The following code chunk deals with the cleaning of the data following the previous 8 remarks about the dataset:
 
@@ -250,7 +257,7 @@ Regarding the Euler Angles, the variables correlation algorithm eliminates the r
 
 #Training the Model
 
-The model selected for this analysis was **Random Forrest (RF)**. This algorithm is highly accurate for classifications problems. However it is also highly computational demanding, and it can takes hours running in a regular personal computer.
+The model selected for this analysis was **Random Forest (RF)**. This algorithm is highly accurate for classifications problems. However it is also highly computational demanding, and it can takes hours running in a regular personal computer.
 
 ##Parallel Processing Setup
 In order to make the RF algorithm more efficient, a parallel setup was used. The computer in which this analysis was run has the following characteristics:
@@ -282,7 +289,7 @@ The **allowParallel** parameter tells the caret's train() function to use the pa
 
 ##Model training using parallel processing
 
-The following code chunk deals with the model training using **caret package random forrest** and parallel processing:
+The following code chunk deals with the model training using **caret package random forest** and parallel processing:
 
 
 ```r
@@ -295,7 +302,7 @@ system.time(modFit <- train(y ~.,data=mytraining,method="rf",trControl=fitContro
 
 ```
 ##     user   system  elapsed 
-##   53.371    3.952 1110.107
+##   49.753    3.739 1094.556
 ```
 
 ```r
@@ -344,6 +351,13 @@ modFit$finalModel
 ## D    0    0   46 3165    5 0.0158582090
 ## E    0    0    0    5 3602 0.0013861935
 ```
+
+#Estimation of the Out of Sample Error
+The model was trained configuring **k-fold Cross-Validation** with k = 10. As it is shown in the **modFit$finalModel**, the model accuracy over the test set (the test sets used in the k-fold cross-validation) is ~ 99.4%, therefore the **out of sample error** should be aprox 0.6%.
+
+Another way of estimate the out of sample error in this case is to check the **out of bag error (OOB)** of the Random forest algorithm. As the OOB error is the error rate over the samples that were not used for built each tree in the RF, therefore, the OOB should be very close to the out of sample error.
+
+In the model trained in this analysis we got on OOB of 0.58%, so we can assume that the **out of sample error** will be very close to 0.58%.
 
 #Prediction in the Testing Dataset
 
